@@ -5,6 +5,8 @@ import {
     TextInput,
     ImageBackground,
     TouchableOpacity,
+    Platform,
+    KeyboardAvoidingView,
 } from 'react-native';
 
 //BACKGROUND-IMAGE & COLOURS
@@ -84,6 +86,10 @@ const StartScreen = ({ navigation }) => {
                         <Text style={styles.textButton}>Start chatting!</Text>
                     </TouchableOpacity>
                 </View>
+
+                {Platform.OS === 'ios' ?
+                    <KeyboardAvoidingView behavior='padding' />
+                    : null}
             </View>
         </ImageBackground>
     );
