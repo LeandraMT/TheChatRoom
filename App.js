@@ -1,10 +1,14 @@
 import StartScreen from './components/Start';
 import ChatScreen from './components/Chat';
 
+import { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useNetInfo } from '@react-native-community/netinfo';
+import { LogBox, Alert } from 'react-native';
+
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, enableNetwork, disableNetwork } from 'firebase/firestore';
 
 
 // Create navigator
@@ -25,6 +29,19 @@ const App = () => {
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
+  // Defining network connection
+  const connectionStatus = useNetInfo();
+
+  useEffect(() => {
+    if (connectionStatus.isConnected === false) {
+      Alert.alert('No connection');
+      disableNetwork(db);
+    }
+    else if (connectionStatus.isConnected === true) {
+      enableNetwork(db);
+    }
+  }, [connectionStatus.isConnected]);
+
 
   return (
     <NavigationContainer>
@@ -39,10 +56,13 @@ const App = () => {
         <Stack.Screen
           name='ChatScreen'
         >
-          {props => <ChatScreen
-            db={db}
-            {...props}
-          />}
+          {props =>
+            <ChatScreen
+              isConnected={connectionStatus.isConnected}
+              db={db}
+              {...props}
+            />
+          }
         </Stack.Screen>
 
       </Stack.Navigator>
