@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 import {
     StyleSheet,
     View, Text,
@@ -7,6 +8,7 @@ import {
     TouchableOpacity,
     Platform,
     KeyboardAvoidingView,
+    Alert
 } from 'react-native';
 
 //BACKGROUND-IMAGE & COLOURS
@@ -19,8 +21,24 @@ const bgColors = {
 }
 
 const StartScreen = ({ navigation }) => {
+    const auth = getAuth();
     const [name, setName] = useState('');
     const [color, setColor] = useState(bgColors.a);
+
+    const signUserIn = () => {
+        signInAnonymously(auth)
+            .then(result => {
+                navigation.navigate('ChatScreen', {
+                    userID: result.user.uid,
+                    name,
+                    color: color
+                });
+                Alert.alert('Signed in successfully');
+            })
+            .catch((err) => {
+                Alert.alert('Unable to sign in. Please try again', err);
+            });
+    }
 
     return (
 
@@ -78,12 +96,9 @@ const StartScreen = ({ navigation }) => {
                             { backgroundColor: '#ced4da' },
 
                         ]}
-                        onPress={() =>
-                            navigation.navigate('ChatScreen',
-                                { name: name, color: color })
-                        }
+                        onPress={signUserIn}
                     >
-                        <Text style={styles.textButton}>Start chatting!</Text>
+                        <Text style={styles.textButton}>Enter your ChatRoom</Text>
                     </TouchableOpacity>
                 </View>
 

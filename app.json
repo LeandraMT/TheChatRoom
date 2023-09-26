@@ -25,6 +25,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "3ff7db4d-e1e6-437b-b94d-c474d04527ad"
+      }
+    },
+    "owner": "leandramt"
   }
 }
