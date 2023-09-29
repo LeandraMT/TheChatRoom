@@ -5,10 +5,11 @@ import { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useNetInfo } from '@react-native-community/netinfo';
-import { LogBox, Alert } from 'react-native';
+import { Alert } from 'react-native';
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, enableNetwork, disableNetwork } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 
 // Create navigator
@@ -25,9 +26,10 @@ const App = () => {
     appId: "1:156313900086:web:d95f2eb55d11d88568f497"
   };
 
-  // Initialize Firebase
+  // Initialize Firebase and store location reference
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const storage = getStorage(app);
 
   // Defining network connection
   const connectionStatus = useNetInfo();
@@ -60,6 +62,7 @@ const App = () => {
             <ChatScreen
               isConnected={connectionStatus.isConnected}
               db={db}
+              storage={storage}
               {...props}
             />
           }

@@ -1,9 +1,10 @@
 import { useActionSheet } from '@expo/react-native-action-sheet';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { TouchableOpacity, View, Text, Alert, StyleSheet } from 'react-native';
 
-const CustomAction = ({ wrapperStyle, iconTextStyle, onSend }) => {
+const CustomAction = ({ wrapperStyle, iconTextStyle, onSend, storage, userID }) => {
 
     const actionSheet = useActionSheet();
 
@@ -41,11 +42,11 @@ const CustomAction = ({ wrapperStyle, iconTextStyle, onSend }) => {
         let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
         if (permissions?.granted) {
-            let result = ImagePicker.launchImageLibraryAsync();
+            let result = await ImagePicker.launchImageLibraryAsync();
 
             if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
 
-            else Alert.alert('Permissions has not been granted');
+            else Alert.alert('Permissions have not been granted');
         }
     }
 
@@ -57,7 +58,7 @@ const CustomAction = ({ wrapperStyle, iconTextStyle, onSend }) => {
 
             if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
 
-            else Alert.alert('Permissions has not been granted');
+            else Alert.alert('Permissions have not been granted');
         }
     }
 
@@ -82,6 +83,26 @@ const CustomAction = ({ wrapperStyle, iconTextStyle, onSend }) => {
         else {
             Alert.alert('Permissions to read location has not been granted');
         }
+    }
+
+    const generateReference = (uri) => {
+        const timeStamp = (new Date()).getTime();
+        const imageName = uri.split("/")[uri.split("/").lenght - 1];
+
+        return `${userID}-${timeStamp}-${imageName}`;
+    }
+
+    const uploadAndSendImage = async (imageURI) => {
+        const uniqueRefString = generateReference(imageURI);
+        const newUploadRef = ref(storage, uniqueRefString);
+        const response = await fetch(imageURI);
+        const blob = await response.blob();
+
+        uploadBytes(newUploadRef, blob).then(async (snapshot) => {
+            const imageURL = await getDownloadURL(snapshot.ref)
+
+            onSend({ image: imageURL })
+        });
     }
 
     return (
