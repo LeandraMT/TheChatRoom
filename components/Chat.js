@@ -1,16 +1,22 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, KeyboardAvoidingView, Platform } from 'react-native';
-import { GiftedChat, Bubble } from 'react-native-gifted-chat';
-import { collection, getDocs, addDoc, query, onSnapshot, orderBy } from 'firebase/firestore';
+import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
+import { collection, addDoc, query, onSnapshot, orderBy } from 'firebase/firestore';
+import MapView from 'react-native-maps';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Component
+import './CustomAction';
+import CustomAction from './CustomAction';
 
 const ChatScreen = ({ route, navigation, db, isConnected }) => {
     const { name, color, userID } = route.params;
     const [messages, setMessages] = useState([]);
 
+    let unsubMessages;
+
     useEffect(() => {
         navigation.setOptions({ title: name });
-        let unsubMessages;
 
         if (isConnected === true) {
             const q = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
@@ -22,17 +28,18 @@ const ChatScreen = ({ route, navigation, db, isConnected }) => {
                         ...doc.data(),
                         createdAt: new Date(doc.data().createdAt.toMillis())
                     });
-                    cacheMessages(newMessages);
+                    cachedMessages(newMessages);
                     setMessages(newMessages);
                 });
             })
         } else loadCachedMessages();
         return () => {
             if (unsubMessages) unsubMessages();
+            unsubMessages = null;
         }
     }, [isConnected]);
 
-    const cacheMessages = async (messagesToCache) => {
+    const cachedMessages = async (messagesToCache) => {
         try {
             await AsyncStorage.setItem('messages', JSON.stringify(messagesToCache));
         }
@@ -43,11 +50,17 @@ const ChatScreen = ({ route, navigation, db, isConnected }) => {
 
     const loadCachedMessages = async () => {
         const cachedMessages = await AsyncStorage.getItem('messages') || [];
-        setMessages(JSON.parse(cacheMessages));
+        setMessages(JSON.parse(cachedMessages));
     }
 
     const onSend = (newMessages) => {
         addDoc(collection(db, 'messages'), newMessages[0]);
+    }
+
+    const renderInputToolBar = (props) => {
+        if (isConnected)
+            return <InputToolbar {...props} />;
+        else return null;
     }
 
     const renderBubble = (props) => {
@@ -61,11 +74,44 @@ const ChatScreen = ({ route, navigation, db, isConnected }) => {
         />
     }
 
+    const renderCustomView = (props) => {
+        const { currentMessage } = props;
+
+        if (currentMessage.location) {
+            return (
+                <MapView
+                    style={{
+                        width: 150,
+                        height: 100,
+                        borderRadius: 13,
+                        margin: 3
+                    }}
+                    region={{
+                        latitude: currentMessage.location.latitude,
+                        longitude: currentMessage.location.longitude,
+                        latitudeDelta: 0.0922,
+                        longitudeDelta: 0.0421,
+                    }}
+                />
+            )
+        }
+    }
+
+    const renderCustomAction = (props) => {
+        return <CustomAction
+            {...props}
+        />
+
+    }
+
     return (
         <View style={[styles.container, { backgroundColor: color }]}>
             <GiftedChat
                 messages={messages}
+                renderInputToolbar={renderInputToolBar}
                 renderBubble={renderBubble}
+                renderActions={renderCustomAction}
+                renderCustomView={renderCustomView}
                 onSend={messages => onSend(messages)}
                 user={{ _id: userID, name }}
             />
