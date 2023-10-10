@@ -42,11 +42,14 @@ const CustomAction = ({ wrapperStyle, iconTextStyle, onSend, storage, userID }) 
         let permissions = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
         if (permissions?.granted) {
-            let result = await ImagePicker.launchImageLibraryAsync();
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                quality: 1,
+            });
 
             if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
 
-            else Alert.alert('Permissions have not been granted');
+            else Alert.alert('Operation cancelled.');
         }
     }
 
@@ -58,7 +61,7 @@ const CustomAction = ({ wrapperStyle, iconTextStyle, onSend, storage, userID }) 
 
             if (!result.canceled) await uploadAndSendImage(result.assets[0].uri);
 
-            else Alert.alert('Permissions have not been granted');
+            else Alert.alert('Operation cancelled.');
         }
     }
 
@@ -81,7 +84,7 @@ const CustomAction = ({ wrapperStyle, iconTextStyle, onSend, storage, userID }) 
             }
         }
         else {
-            Alert.alert('Permissions to read location has not been granted');
+            Alert.alert('Operation cancelled.');
         }
     }
 
